@@ -1,87 +1,152 @@
 "use client";
-import React, { useState, useRef, useContext} from "react";
-import Image from "next/image";
-import { playerContext } from "../context/playerContext";
-import { Resend } from 'resend';
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { FaTrophy, FaFire, FaUserPlus, FaStar, FaBolt } from "react-icons/fa";
 
-
-type milestoneType = {
-  Milestone_Id: number;
-  Milestone_Title: string;
-  Milestone_description: string;
-  UnlockingLevel: number;
-  Milestone_reward_message: string;
-  Milestone_Link:string; 
-  Milestone_Button_CTA : string 
+type RewardItem = {
+  id: number;
+  title: string;
+  description: string;
+  type: "milestone" | "streak" | "referral" | "points" | "correctStreak";
+  progress: number;
+  claimable: boolean;
+  claimed: boolean;
+  rewardPoints: number;
 };
 
-type playerType = {
-  Player_ID: number;
-  Player_name: string;
-  Playerpoint: number;
-  streak: number;
-  lastLogin: Date;
-  Level_Id: number;
-  Milestone_Id?: number;
-  milestone: milestoneType;
+type Props = {
+  playerId: number;
 };
 
+const rewardIcons: Record<RewardItem["type"], JSX.Element> = {
+  milestone: <FaTrophy className="text-yellow-500 text-lg mr-2" />,
+  streak: <FaFire className="text-orange-500 text-lg mr-2" />,
+  referral: <FaUserPlus className="text-pink-500 text-lg mr-2" />,
+  points: <FaStar className="text-purple-500 text-lg mr-2" />,
+  correctStreak: <FaBolt className="text-green-600 text-lg mr-2" />,
+};
 
-  type typeRewardCopy =  { 
-    player : playerType | null
-  }
+export default function RewardPage({ playerId }: Props) {
+  const [rewards, setRewards] = useState<RewardItem[]>([]);
+  const [showModal, setShowModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
 
+  useEffect(() => {
+    const fetchRewards = async () => {
+      const res = await fetch(`/api/reward?playerId=${playerId}`);
+      const data = await res.json();
 
-function RewardCopy({player}:typeRewardCopy) {
-  const router = useRouter()
-  const reward = player?.milestone
-  const playerId = player?.Player_ID
-  const currentMilestone = player?.milestone?.Milestone_Id ?? 1
-  
-  const handleSumit = async (e: React.FormEvent) => { 
-    e.preventDefault()
-   const  nextMilestone = currentMilestone + 1
-    const response = await fetch("/api/reward", {
+      const sorted = [...data].sort((a: RewardItem, b: RewardItem) => {
+        if (a.claimed === b.claimed) return b.progress - a.progress;
+        return a.claimed ? 1 : -1;
+      });
+
+      setRewards(sorted);
+    };
+
+    fetchRewards();
+  }, [playerId]);
+
+  const handleClaim = async (reward: RewardItem) => {
+    if (!reward.claimable || reward.claimed) return;
+
+    const res = await fetch("/api/reward", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ playerId,  nextMilestone }),
+      body: JSON.stringify({ playerId, rewardId: reward.id }),
+      headers: { "Content-Type": "application/json" },
     });
-  
-    if (response.ok) { 
-      
-    
-      const data = await response.json()
-      if (reward?.Milestone_Link) {
-        window.open(String(reward.Milestone_Link), "_blank");
-      }
-      console.log(data.nextMilestone)
-      router.push("/quiz")
-      
 
+    if (res.ok) {
+      setModalMessage(`🎉 You are awarded with ${reward.rewardPoints} points!`);
+      setShowModal(true);
+
+      // Update reward list locally
+      setRewards((prev) =>
+        [...prev.map((r) =>
+          r.id === reward.id
+            ? { ...r, claimed: true, claimable: false }
+            : r
+        )].sort((a, b) => {
+          if (a.claimed === b.claimed) return b.progress - a.progress;
+          return a.claimed ? 1 : -1;
+        })
+      );
     } else {
-      console.error("Failed to send email");
+      const data = await res.json();
+      alert(data.message || "⚠️ Unable to claim reward");
     }
   };
 
-
-
   return (
-    <div className="container">
-      <h1 className="title mt-20">{reward?.Milestone_Title}</h1>
-      <p className="mt-6">
-      {reward?.Milestone_description}      </p>
-      <p className="mt-4">{reward?.Milestone_reward_message}</p>
-      <div className="my-11">        <button className="quizPbtn" onClick={handleSumit}>{reward?.Milestone_Button_CTA}</button>
+    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        Your Rewards Are Here
+      </h1>
 
+      {rewards.length === 0 ? (
+        <p className="text-center text-gray-500">No rewards found.</p>
+      ) : (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          {rewards.map((reward) => (
+            <div
+              key={reward.id}
+              className="relative border border-gray-200 p-6 rounded-2xl shadow-lg bg-white hover:bg-gray-50 transition-all duration-300"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  {rewardIcons[reward.type]}
+                  <h2 className="text-lg font-semibold text-gray-800">{reward.title}</h2>
+                </div>
+                <span className="text-xs px-2 py-1 rounded bg-gray-200 text-gray-600 uppercase font-medium">
+                  {reward.type}
+                </span>
+              </div>
 
-      </div>
-     
-   
+              {/* Description */}
+              <p className="text-sm text-gray-600 mb-3">{reward.description}</p>
+
+              {/* Progress bar */}
+              <div className="w-full bg-gray-200 h-3 rounded-full overflow-hidden mb-2">
+                <div
+                  className="bg-green-500 h-3 transition-all duration-300"
+                  style={{ width: `${reward.progress}%` }}
+                />
+              </div>
+              <p className="text-sm text-gray-500">{reward.progress}% complete</p>
+
+              {/* Claim button */}
+              <div className="mt-0 text-right">
+  <button
+    disabled={!reward.claimable || reward.claimed}
+    onClick={() => handleClaim(reward)}
+    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+      reward.claimed
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-green-600 text-white hover:bg-green-700"
+    }`}
+  >
+    {reward.claimed ? "Claimed" : "Claim"}
+  </button>
+</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm w-full text-center">
+            <p className="text-lg font-semibold text-gray-800 mb-4">{modalMessage}</p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-export default RewardCopy;

@@ -14,6 +14,7 @@
     "clsx": "^2.1.1",
     "cookies-next": "^4.3.0",
     "framer-motion": "^11.18.0",
+    "lucide-react": "^0.515.0",
     "next": "14.1.4",
     "next-auth": "^5.0.0-beta.25",
     "nextjs-toploader": "^3.7.15",

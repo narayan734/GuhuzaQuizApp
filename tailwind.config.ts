@@ -26,15 +26,22 @@ const config: Config = {
           '80%': { transform: 'translateX(-5px)' },
           '90%': { transform: 'translateX(5px)' },
           '100%': { transform: 'translateX(0)' },
-
-        }
+        },
+        pulseBadge: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.1)' },
+        },
       },
       animation: {
-        shake: 'shake 6s ease-in-out ', // Adjust duration and timing function as needed
+        shake: 'shake 6s ease-in-out',
+        'badge-pulse': 'pulseBadge 4s ease-in-out infinite',
       },
-
     },
   },
-  plugins: [require('tailwindcss-motion'), require('tailwindcss-intersect'), ],
+  plugins: [
+    require("tailwindcss-motion"),
+    require("tailwindcss-intersect"),
+  ],
 };
+
 export default config;

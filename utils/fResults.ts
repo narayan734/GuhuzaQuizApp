@@ -32,7 +32,7 @@ export async function saveResultIfHigher({
   });
 
   const previousScore = existingResult?.score ?? 0;
-  const newScore = correct * 10; // ✅ replace this logic if you use retry/hint penalties
+  const newScore = score // ✅ replace this logic if you use retry/hint penalties
   const scoreDifference = newScore - previousScore;
 
   if (!existingResult || newScore > previousScore) {

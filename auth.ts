@@ -49,6 +49,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.user.firstName = token.firstName as string;
                 session.user.lastName = token.lastName as string;
                 session.user.memberId = parseInt(token.id as string);
+                  session.user.needsUsername = !token.username; // ✅ check if missing
+
             }
             return session
         },
@@ -58,6 +60,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 token.email = user.email
                 token.firstName = (user as Member).firstName
                 token.lastName = (user as Member).lastName
+                token.username = (user as any).Player_name || null;
+
             }
             return token
         },

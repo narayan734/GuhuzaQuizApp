@@ -6,6 +6,7 @@ type PbtnType = {
   message: string;
   toDestination: string;
   theme?: "dark" | "light"; // Theme prop to control the button's appearance
+  
 };
 
 function Pbtn({ message, toDestination, theme = "light" }: PbtnType) {

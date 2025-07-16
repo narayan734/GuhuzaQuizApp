@@ -32,14 +32,18 @@ export function getBadgeProgress(score: number) {
 
   let progress = 100;
   if (next) {
-    const scorePercent = Math.min(score / next.score, 1);
-    progress = Math.floor(scorePercent * 100);
+    const range = next.score - (current?.score ?? 0);
+    const covered = score - (current?.score ?? 0);
+    progress = Math.floor((covered / range) * 100);
   }
 
   return {
     currentBadge: current?.badge || "None",
     nextBadge: next?.badge || null,
+    nextScore: next?.score || null,
     progress,
   };
-}console.log(getBadge(80));  // Expected: "Amature"
+}
+
+console.log(getBadge(80));  // Expected: "Amature"
 

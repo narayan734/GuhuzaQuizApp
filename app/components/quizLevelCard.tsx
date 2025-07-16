@@ -19,17 +19,15 @@ function QuizLevelCard({
   correct,
   total,
 }: QuizLevelCardTypes) {
-  return (
-    <div
-     className={` relative levelContainer bg-[#0a1a2f] text-white rounded-lg p-6 border border-white/10 shadow-md mt-10 lg:w-1/2 duration-300 lg:even:ml-auto hover:scale-[1.1] hover:shadow-lg transition-transform  ${levelNumber === 1 ? "mb-20" : ""}`}
+  const isUnlocked = levelNumber <= currentLevel; // 🔓 logic
 
-    >
-      {/* ⭐ Star rating top-right if score exists */}
+  return (
+    <div className="bg-[#0a1a2f] text-white p-6 rounded-lg shadow-md w-full min-h-[200px] flex flex-col justify-between relative transition-transform duration-300 hover:scale-105 hover:shadow-[0_4px_20px_rgba(255,123,0,0.6)]">
+
       {correct != null && total != null && (
         <div className="absolute top-3 right-3 bg-white rounded-md px-2 py-1">
-            <StarRating score={(correct / total) * 100} />
-           </div>
-
+          <StarRating score={(correct / total) * 100} />
+        </div>
       )}
 
       <div className="flex gap-4">
@@ -41,7 +39,6 @@ function QuizLevelCard({
           <h3 className="text-2xl font-semibold mb-2">{levelName}</h3>
           <p>Number of Questions: 10</p>
 
-          {/* ✅ Show score if quiz attempted */}
           {correct !== null && total !== null && (
             <p className="text-green-600 font-semibold mt-1">
               ✅ Answer: {correct}/{total}
@@ -49,16 +46,22 @@ function QuizLevelCard({
           )}
 
           <div className="mt-4 flex gap-2">
-            {correct !== null && total !== null && (
-              <Pbtn message="Retry" toDestination={levelLink} />
+            {isUnlocked ? (
+              <>
+                {correct !== null && total !== null && (
+                  <Pbtn message="Retry" toDestination={levelLink} />
+                )}
+                <Pbtn message="Start Quiz" toDestination={levelLink} />
+              </>
+            ) : (
+              <p className="text-sm text-red-400 font-semibold mt-2">🔒 Locked</p>
             )}
-            <Pbtn message="Start Quiz" toDestination={levelLink} />
           </div>
         </div>
       </div>
     </div>
-   
   );
 }
+
 
 export default QuizLevelCard;

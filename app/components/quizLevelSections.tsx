@@ -6,6 +6,7 @@ import Link from "next/link";
 type typeDisplayLevel = {
   playerLevel: number;
   playerId: number;
+  
 };
 
 type levelType = {
@@ -33,16 +34,38 @@ async function QuizLevelSections({ playerLevel, playerId }: typeDisplayLevel) {
       <div className="container grid lg:gap-16 gap-8">
         <Suspense fallback={<div>Loading....</div>}>
           <QuizList
-            cutEnding={true}
-            allLevels={levels}
-            playerLevel={playerLevel}
-            playerId={playerId}
-          />
+  cutEnding={true} 
+  allLevels={levels}
+  playerLevel={playerLevel}
+  playerId={playerId}
+  showCurrentLevel={true}
+/>
+
         </Suspense>
 
-        <Link href={"/allquiz"} className="font-semibold underline text-center">
-          View All Quiz
-        </Link>
+       <div className="flex justify-center gap-4 mt-6">
+  <Link
+    href="/quizhistory"
+    className="w-fit px-4 py-2 text-sm font-semibold rounded bg-gray-800 text-white hover:bg-gray-700 hover:-translate-y-1 transform transition duration-200 shadow-md"
+  >
+    Quizes History
+  </Link>
+
+  <Link
+    href="/allquiz"
+    className="w-fit px-4 py-2 text-sm font-semibold rounded bg-gray-800 text-white hover:bg-gray-700 hover:-translate-y-1 transform transition duration-200 shadow-md"
+  >
+   View All Quizes
+  </Link>
+</div>
+
+
+
+   
+
+
+
+        
       </div>
     </div>
   );

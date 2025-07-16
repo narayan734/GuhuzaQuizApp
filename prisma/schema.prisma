@@ -9,53 +9,65 @@ datasource db {
 }
 
 model level {
-  Level_Id     Int      @id @default(autoincrement())
+  Level_Id     Int          @id @default(autoincrement())
   Level_Title  String
   Level_number Int
   player       player[]
-   quizResults  quizResult[] 
+  quizResults  quizResult[]
 }
 
 model milestone {
-  Milestone_Id             Int      @id @default(autoincrement())
+  Milestone_Id             Int    @id @default(autoincrement())
   Milestone_Title          String
   Milestone_description    String
   UnlockingLevel           Int
   Milestone_reward_message String
   Milestone_Link           String
   Milestone_Button_CTA     String
-  player                   player[]
+
+  players player[] @relation("PlayerMilestones")
 }
 
 model player {
-  Player_ID    Int        @id @default(autoincrement())
-  Player_name  String
-  Playerpoint  Int
-  streak       Int
-  lastLogin    DateTime
-  Level_Id     Int?
-  Milestone_Id Int?
-  badge        String     @default("None")
-  level        level?     @relation(fields: [Level_Id], references: [Level_Id], map: "Player_Level_Id_fkey")
-  milestone    milestone? @relation(fields: [Milestone_Id], references: [Milestone_Id], map: "Player_Milestone_Id_fkey")
+  Player_ID   Int      @id @default(autoincrement())
+  Player_name String
+  Playerpoint Int
+  streak      Int
+  lastLogin   DateTime
+  Level_Id    Int?
+  badge       String   @default("None")
+   correctStreak Int     @default(0)
+  referrals     Int     @default(0) 
+  invitesSent   Int      @default(0)  
 
- quizResults  quizResult[] 
+  level          level?          @relation(fields: [Level_Id], references: [Level_Id], map: "Player_Level_Id_fkey")
+  milestones     milestone[]     @relation("PlayerMilestones")
+  quizResults    quizResult[]
+  claimedRewards ClaimedReward[]
 
   @@index([Level_Id], map: "Player_Level_Id_fkey")
-  @@index([Milestone_Id], map: "Player_Milestone_Id_fkey")
 }
 
-
 model quizResult {
-  id         Int      @id @default(autoincrement())
-  player     player   @relation(fields: [playerId], references: [Player_ID])
-  playerId   Int
-  level      level    @relation(fields: [levelId], references: [Level_Id])
-  levelId    Int
-  correct    Int
-  incorrect  Int
-  createdAt  DateTime @default(now())
-  score      Int      @default(0) //
+  id        Int      @id @default(autoincrement())
+  player    player   @relation(fields: [playerId], references: [Player_ID])
+  playerId  Int
+  level     level    @relation(fields: [levelId], references: [Level_Id])
+  levelId   Int
+  correct   Int
+  incorrect Int
+  createdAt DateTime @default(now())
+  score     Int      @default(0)
 
   @@unique([playerId, levelId])
+}
+
+model ClaimedReward {
+  id        Int      @id @default(autoincrement())
+  player    player   @relation(fields: [playerId], references: [Player_ID])
+  playerId  Int
+  rewardId  Int
+  claimedAt DateTime @default(now())
+
+  @@unique([playerId, rewardId]) // Prevent duplicate claims
 }

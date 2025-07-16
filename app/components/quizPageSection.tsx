@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { saveResultIfHigher } from "@/utils/fResults";
 import { getBadge, getBadgeProgress } from "./badge";
+import SharePopup from "@/app/share/page";
 
 export default function QuizPageSection({ Quizes, levelNumber, levelTitle, player }: any) {
   const len = Quizes.length;
@@ -16,7 +17,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
   const [answerChecked, setAnswerChecked] = useState(false);
   const [ansCorrect, setAnsCorrect] = useState(false);
   const [usedHint, setUsedHint] = useState(false);
-  const [retried, setRetried] = useState(false);
+  const [retryCount, setRetryCount] = useState(0); // ✅ replaced retried with retryCount
   const [timer, setTimer] = useState(40);
   const [isTimeUp, setIsTimeUp] = useState(false);
   const [rank, setRank] = useState(0);
@@ -31,6 +32,8 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
 
   const quizer = Quizes[questionNumber];
   const totalScore = player?.Playerpoint ? player.Playerpoint + score : score;
+  const [correctStreak, setCorrectStreak] = useState(0);
+
 
   useEffect(() => {
     setTimer(40);
@@ -51,13 +54,13 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
   useEffect(() => {
     const saveFinalResult = async () => {
       if (questionNumber >= len) {
-        const finalScore = correctAnswersCount * 10;
+        const finalScore = score;
         await saveResultIfHigher({
           playerId: player.Player_ID,
           levelId: parseInt(levelNumber),
           correct: correctAnswersCount,
           incorrect: len - correctAnswersCount,
-          score,
+          score: finalScore,
         });
 
         const finalTotalScore = player?.Playerpoint ? player.Playerpoint + finalScore : finalScore;
@@ -78,60 +81,69 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
     setAnswerChecked(false);
     setAnsCorrect(false);
     setUsedHint(false);
-    setRetried(false);
+    setRetryCount(0); // ✅ reset retry count per question
   };
 
   const handleScore = async () => {
-    setAnswerChecked(true);
-    if (selectedAnswer === quizer.test_answer && !isTimeUp) {
-      const addedScore = retried ? 7 : 10;
-      const newScore = score + addedScore;
-      setScore(newScore);
-      const newCorrectCount = correctAnswersCount + 1;
-      setCorrectAnswersCount(newCorrectCount);
+  setAnswerChecked(true);
 
-      if (questionNumber === len - 1) {
-        await saveResultIfHigher({
-          playerId: player.Player_ID,
-          levelId: parseInt(levelNumber),
-          correct: newCorrectCount,
-          incorrect: len - newCorrectCount,
-          score: newScore,
-        });
+  const isCorrect = selectedAnswer === quizer.test_answer && !isTimeUp;
 
-        const finalTotalScore = player?.Playerpoint ? player.Playerpoint + newScore : newScore;
-        const badge = getBadge( finalTotalScore);
+  if (isCorrect) {
+    let addedScore = 0;
 
-        await fetch("/api/player/updateBadge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ playerId: player.Player_ID, badge }),
-        });
-      }
-
-      await fetch("/api/quiz/updateScore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: player.Player_ID, newScore }),
-      });
-
-      const res = await fetch("/api/quiz/rank", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId: player.Player_ID }),
-      });
-
-      const data = await res.json();
-      setRank(data.rank);
+    if (retryCount === 0) {
+      addedScore = 10;
+    } else if (retryCount === 1) {
+      addedScore = 7;
+    } else {
+      addedScore = 0; // ✅ no points on third+ retry
     }
-  };
 
-  const handleRetry = () => {
-    setScore(0);
-    setCorrectAnswersCount(0);
-    setQuestionNumber(0);
-    router.push("/quiz/" + levelNumber);
-  };
+    const newScore = score + addedScore;
+    setScore(newScore);
+    setCorrectAnswersCount(correctAnswersCount + 1);
+
+    // ✅ Increment and save correct streak
+    const updatedStreak = correctStreak + 1;
+    setCorrectStreak(updatedStreak);
+
+
+
+
+    await fetch("/api/player/updateStreak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerId: player.Player_ID,
+        correctStreak: updatedStreak,
+      }),
+    });
+
+    // ✅ Update rank
+    const res = await fetch("/api/quiz/rank", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ playerId: player.Player_ID }),
+    });
+
+    const data = await res.json();
+    setRank(data.rank);
+  } else {
+    // ❌ Incorrect or time's up → reset streak
+    setCorrectStreak(0);
+
+    await fetch("/api/player/updateStreak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        playerId: player.Player_ID,
+        correctStreak: 0,
+      }),
+    });
+  }
+};
+
 
   const handleNextQuestion = () => {
     if (questionNumber < len) {
@@ -139,6 +151,13 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
       setDefault();
     }
   };
+  const handleRetry = () => {
+  setSelectedAnswer(-1);
+  setAnswerChecked(false);
+  setRetryCount((prev) => prev + 1);
+  setUsedHint(false); // Optional: reset hint usage if you want
+};
+
 
   const handleNextLevel = async () => {
     const nextLevel = Number(levelNumber) + 1;
@@ -169,13 +188,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
       setNextBadge(nextBadge);
       setProgress(progress);
 
-      // Fallback badge update (if final answer was wrong)
       const badge = getBadge(totalScore);
-
-      console.log("🛠 Sending badge update to server:", badge, "for player:", player.Player_ID);
-
-
-
 
       fetch("/api/player/updateBadge", {
         method: "POST",
@@ -245,11 +258,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
                 !ansCorrect ? (
                   <div>
                     <div className="flex gap-10">
-                      <button className="quizPbtn" onClick={() => {
-                        setSelectedAnswer(-1);
-                        setAnswerChecked(false);
-                        setRetried(true);
-                      }} disabled={usedHint}>
+                      <button className="quizPbtn" onClick={handleRetry} disabled={usedHint}>
                         Retry
                       </button>
                       <button className="quizSbtn" onClick={() => {
@@ -259,6 +268,11 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
                         Display Answer
                       </button>
                     </div>
+                    {retryCount >= 2 && (
+                      <p className="mt-4 text-sm text-red-600">
+                        ⚠️ You will not earn points on this attempt.
+                      </p>
+                    )}
                     <p className="mt-6 text-sm absolute">You can use Display Answer to force move to next question without any point</p>
                   </div>
                 ) : (
@@ -276,7 +290,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
                   </div>
                 )
               ) : (
-                <button className="quizPbtn" onClick={handleScore} disabled={selectedAnswer == -1}>
+                <button className="quizPbtn" onClick={handleScore} disabled={selectedAnswer === -1}>
                   Check Answer
                 </button>
               )}
@@ -295,6 +309,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
       </div>
     </div>
   ) : (
+    // ✅ Quiz Finished View (unchanged)
     <div className="md:py-16 py-8">
       <div className="container">
         <div className="flex flex-col items-center">
@@ -331,7 +346,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
               </div>
               <div className="bg-blue-50 rounded border-2 border-blue-100 flex flex-col gap-4 items-center px-6 py-4">
                 <p className="mt-4 text-xl">🏆 TOTAL SCORE</p>
-                <h1 className="text-6xl font-bold">{totalScore}</h1>
+                <h1 className="text-6xl font-bold">{player?.Playerpoint + score}</h1>
               </div>
             </div>
             <Image
@@ -346,6 +361,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
           <div className="flex flex-wrap justify-center gap-4 mt-20">
             <button className="quizPbtn" onClick={handleRetry}>↻ Retry</button>
             <button className="quizPbtn" onClick={handleNextLevel}>Next Level</button>
+            <SharePopup score={score} player={player} levelTitle={levelTitle} buttonClass="quizPbtn" />
           </div>
         </div>
       </div>

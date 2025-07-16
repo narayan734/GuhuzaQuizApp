@@ -18,6 +18,7 @@ type playerType = {
     Level_Id?: number,
     Milestone_Id?: number,
     badge?: string;
+    milestone?: milestoneType;
 }
 
 type Players = playerType[]
@@ -28,7 +29,7 @@ async function fetchPlayers() {
         const players = await prisma.player.findMany(
             {
                 include: {
-                    milestone: true
+                    milestones: true
                 }
             }
         );

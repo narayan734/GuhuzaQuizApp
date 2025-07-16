@@ -62,6 +62,7 @@ export default async function LeaderBoard() {
     }
   }
 
+
   return (
     <div className=" py-24">
       <div className="container">
@@ -95,8 +96,19 @@ export default async function LeaderBoard() {
           key={playerData?.Player_ID}
           className={`${rowClass} transition-all hover:bg-gray-100`}
         >
-          <td className="px-6 py-4">{leaderBoardRank}</td>
-          <td className="px-6 py-4">{playerData?.Player_name}</td>
+          <td className="px-6 py-4">
+  {index === 0 ? (
+    <span className="text-5xl">🥇</span>
+  ) : index === 1 ? (
+    <span className="text-5xl">🥈</span>
+  ) : index === 2 ? (
+    <span className="text-5xl">🥉</span>
+  ) : (
+    <span className="text-base  text-5xl">{leaderBoardRank}</span>
+  )}
+</td>
+
+          <td className="px-6 py-4 text-5x1">{playerData?.Player_name}</td>
           <td className="px-6 py-4">{playerData?.Playerpoint}</td>
           <td className="px-6 py-4">{playerData?.Level_Id}</td>
           <td className="px-6 py-4">{playerData?.badge}</td>
