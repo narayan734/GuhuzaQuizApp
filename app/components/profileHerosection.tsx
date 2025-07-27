@@ -150,13 +150,7 @@ function ProfileHerosection({ player, playerRank }: typePlayerHeroSection) {
               height={100}
             />
             <p className="text-sm text-center mt-2 text-gray-700">
-              Solve{" "}
-              {Math.max(
-                0,
-                (player?.milestone?.UnlockingLevel ?? 0) -
-                  (player?.Level_Id ?? 0)
-              )}{" "}
-              more level to get your reward
+              Please check your rewards.
             </p>
 
 

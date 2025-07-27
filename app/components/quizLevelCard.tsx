@@ -9,6 +9,7 @@ type QuizLevelCardTypes = {
   currentLevel: number;
   correct?: number | null;
   total?: number | null;
+  score: number|null ;
 };
 
 function QuizLevelCard({
@@ -18,6 +19,7 @@ function QuizLevelCard({
   currentLevel,
   correct,
   total,
+  score,
 }: QuizLevelCardTypes) {
   const isUnlocked = levelNumber <= currentLevel; // 🔓 logic
 
@@ -39,11 +41,12 @@ function QuizLevelCard({
           <h3 className="text-2xl font-semibold mb-2">{levelName}</h3>
           <p>Number of Questions: 10</p>
 
-          {correct !== null && total !== null && (
-            <p className="text-green-600 font-semibold mt-1">
-              ✅ Answer: {correct}/{total}
-            </p>
-          )}
+          {correct !== null && total !== null && score !== null && (
+  <p className="text-green-600 font-semibold mt-1">
+    ✅ Total Score: {score}
+  </p>
+)}
+
 
           <div className="mt-4 flex gap-2">
             {isUnlocked ? (

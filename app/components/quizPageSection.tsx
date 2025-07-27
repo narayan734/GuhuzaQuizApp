@@ -218,7 +218,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
   }, [progress]);
 
   return !quizFinished ? (
-    <div className="md:py-16 pt-8 pb-28">
+    <div className="md:py-16 pt-8 pb-15">
       <div className="container">
         <div className="flex justify-between flex-wrap mb-4">
           <h2 className="title">Level {levelNumber} : {levelTitle}</h2>
@@ -253,7 +253,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
               setAnsCorrect={setAnsCorrect}
             />
 
-            <div className="mt-10">
+            <div className="mt-5">
               {answerChecked ? (
                 !ansCorrect ? (
                   <div>

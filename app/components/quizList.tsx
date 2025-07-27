@@ -17,6 +17,7 @@ async function QuizList({
   playerId,
   showOnlyPlayed = false,
   showCurrentLevel = false,
+  
 }: {
   allLevels: levelsType;
   cutEnding: boolean;
@@ -77,11 +78,8 @@ async function QuizList({
               levelName={level.Level_Title}
               currentLevel={playerLevel}
               correct={result?.correct ?? null}
-              total={
-                result?.incorrect != null && result?.correct != null
-                  ? result.correct + result.incorrect
-                  : null
-              }
+              total={ result?.incorrect != null && result?.correct != null ? result.correct + result.incorrect : null}
+              score={result?.score ?? null}
             />
           );
         })}
