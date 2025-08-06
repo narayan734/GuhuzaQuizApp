@@ -10,13 +10,20 @@ type Level = {
   Level_number: number;
 };
 
+type QuizResult = {
+  Level_Id: number;
+  correct: number;
+  total: number;
+};
+
 type Props = {
   allLevels: Level[];
   playerLevel: number;
   playerId: number;
+  quizResults: QuizResult[];
 };
 
-const QuizAccordion = ({ allLevels, playerLevel, playerId }: Props) => {
+const QuizAccordion = ({ allLevels, playerLevel, playerId, quizResults }: Props) => {
   const [activeSet, setActiveSet] = useState<number | null>(null);
 
   const levelGroups = [
@@ -31,6 +38,10 @@ const QuizAccordion = ({ allLevels, playerLevel, playerId }: Props) => {
     setActiveSet(activeSet === id ? null : id);
   };
 
+  const getResultForLevel = (levelId: number) =>
+  (quizResults ?? []).find((res) => res.Level_Id === levelId);
+
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-10">
       <h1 className="text-3xl font-bold mb-4">All Quiz</h1>
@@ -40,7 +51,8 @@ const QuizAccordion = ({ allLevels, playerLevel, playerId }: Props) => {
         {levelGroups.map((group) => {
           const levels = allLevels.filter(
             (level) =>
-              level.Level_number >= group.start && level.Level_number <= group.end
+              level.Level_number >= group.start &&
+              level.Level_number <= group.end
           );
 
           return (
@@ -57,8 +69,9 @@ const QuizAccordion = ({ allLevels, playerLevel, playerId }: Props) => {
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {levels.map((level) => {
                     const isUnlocked = level.Level_number <= playerLevel;
-                    const correct = null; // replace with actual score
-                    const total = null;   // replace with actual total
+                    const result = getResultForLevel(level.Level_Id);
+                    const correct = result?.correct ?? null;
+                    const total = result?.total ?? null;
 
                     return (
                       <div
@@ -83,7 +96,7 @@ const QuizAccordion = ({ allLevels, playerLevel, playerId }: Props) => {
                             <p>Number of Questions: 10</p>
 
                             {correct != null && total != null && (
-                              <p className="text-green-600 font-semibold mt-1">
+                              <p className="text-green-400 font-semibold mt-1">
                                 ✅ Answer: {correct}/{total}
                               </p>
                             )}

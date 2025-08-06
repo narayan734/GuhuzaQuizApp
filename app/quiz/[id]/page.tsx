@@ -1,5 +1,4 @@
 import Qbtn from "@/app/components/buttons/quizbtn";
-
 import { fetchQuiz } from "@/utils/fQuiz";
 import QuizCard from "@/app/components/quizCard";
 import QuizPageSection from "@/app/components/quizPageSection";
@@ -7,45 +6,55 @@ import fetchLevels from "@/utils/fLevels";
 import fetchPlayers from "@/utils/fPlayers";
 import { auth } from "@/auth";
 import fetchUser from "@/utils/fUser";
-import { getCookie, setCookie } from "cookies-next";
 
 type quizeType = {
   question: string;
   comment: string;
   test_answer: number;
-
   answers: string[];
 };
 type quizesType = {
   question: quizeType[];
 };
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: { id: string };
+  searchParams: { [key: string]: string };
+}) {
 
+  const rawId = params.id;
+  const levelId = params.id.split("?")[0]; // ✅ Clean it just in case
 
-    const data = await fetchQuiz(params.id);
-    const Quizes = data.test.question;
+  console.log("🟡 RAW ID:", rawId);
+console.log("🟢 FINAL LEVEL ID:", levelId);
+  const prevScore = searchParams.prevScore ?? null;
 
-    const levels = (await fetchLevels()|| [])
-    const levelNumber = params.id
-    const levelTitle = levels?.[Number(levelNumber)-1].Level_Title
+  const data = await fetchQuiz(levelId);
+  const Quizes = data.test.question;
 
-    const session = await auth()
+  const levels = (await fetchLevels()) || [];
+  const levelTitle = levels?.[Number(levelId) - 1]?.Level_Title;
 
-    const user = session && session?.user;
-    const name =session ? user?.firstName == null ? "Anonymous" :user?.firstName : ""
-    
-    const player = session ? await fetchUser(
-      Number(user?.memberId),
-      name,
-      user?.email || ""
-    ) : {}
+  const session = await auth();
+  const user = session?.user;
+  const name = user?.firstName ?? "Anonymous";
 
-    return (
-      <div>
-     
-        <QuizPageSection Quizes={Quizes} levelNumber = {levelNumber}  levelTitle = {levelTitle}  player={player} />
-      </div>
-    );
- 
+  const player = session
+    ? await fetchUser(Number(user?.memberId), name, user?.email || "")
+    : {};
+
+  return (
+    <div>
+      <QuizPageSection
+        Quizes={Quizes}
+        levelNumber={levelId}
+        levelTitle={levelTitle}
+        player={player}
+        prevScore={prevScore}
+      />
+    </div>
+  );
 }

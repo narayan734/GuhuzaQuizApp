@@ -2,17 +2,20 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { levels } from "@/lib/db";
 
 export default function SharePopup({ score, player, levelTitle, buttonClass = "", totalScore = 0, correct = 0 }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Construct shareable link to /share?score=...&level=...&badge=...&correct=...
-  const shareLink = `https://guhuza.com/share?score=${score}&total=${totalScore}&level=${encodeURIComponent(
-    levelTitle
-  )}&badge=${encodeURIComponent(player?.badge || "Bronze")}&correct=${correct}`;
+  const baseUrl = "https://guhuza.com"; // ✅ Replace with your live domain
 
-  const shareText = `I just scored ${score} in ${levelTitle}! Can you beat me? 🧠🔥`;
-  const encodedText = encodeURIComponent(`${shareText}\nCheck it out here: ${shareLink}`);
+const shareLink = `${baseUrl}`;
+
+const shareText = `Hey I just play Guhuza Quiz on its website and  just scored ${score} in ${levelTitle}! Can you beat me? 🔥`;
+
+const encodedText = encodeURIComponent(`${shareText}\n\nPlay now: ${shareLink}`);
+
 
   return (
     <div>

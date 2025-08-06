@@ -3,19 +3,46 @@ import { getRewardListForPlayer } from "@/lib/rewards/getRewardListForPlayer";
 import prisma from "@/lib/prisma";
 
 // Static reward definitions
-const rewardDefinitions = [
+export const rewardDefinitions = [
+  // 🎉 Milestone Rewards (Level-based)
   { id: 1, type: "milestone", unlockLevel: 1, points: 10 },
   { id: 2, type: "milestone", unlockLevel: 2, points: 25 },
-  { id: 3, type: "milestone", unlockLevel: 4, points: 50 },
-  { id: 4, type: "points", requiredPoints: 250, points: 0 },
-  { id: 5, type: "points", requiredPoints: 500, points: 0 },
-  { id: 6, type: "streak", requiredDays: 3, points: 20 },
-  { id: 7, type: "correctStreak", requiredStreak: 5, points: 30 },
+  { id: 3, type: "milestone", unlockLevel: 4, points: 30 },
+  { id: 12, type: "milestone", unlockLevel: 5, points: 35 },
+  { id: 13, type: "milestone", unlockLevel: 10, points: 50 },
+  { id: 14, type: "milestone", unlockLevel: 15, points: 65 },
+  { id: 15, type: "milestone", unlockLevel: 20, points: 75 },
+  { id: 16, type: "milestone", unlockLevel: 25, points: 80 },
+  { id: 17, type: "milestone", unlockLevel: 30, points: 100 },
+  { id: 18, type: "milestone", unlockLevel: 35, points: 150 },
+  { id: 19, type: "milestone", unlockLevel: 40, points: 200 },
+  { id: 20, type: "milestone", unlockLevel: 45, points: 250 },
+  { id: 21, type: "milestone", unlockLevel: 50, points: 300 },
+
+  // 🏆 Points-based Rewards
+  { id: 4, type: "points", requiredPoints: 250, points: 15 },
+  { id: 5, type: "points", requiredPoints: 500, points: 50 },
+  { id: 22, type: "points", requiredPoints: 750, points: 75 },
+  { id: 23, type: "points", requiredPoints: 1000, points: 100 },
+  { id: 24, type: "points", requiredPoints: 1500, points: 150 },
+  { id: 25, type: "points", requiredPoints: 2000, points: 250 },
+
+  // 🔥 Streak Rewards
+  { id: 6, type: "streak", requiredDays: 3, points: 5 },
+  { id: 26, type: "streak", requiredDays: 5, points: 10 },
+  { id: 27, type: "streak", requiredDays: 15, points: 50 },
+
+  // ⚡ Correct Answer Streaks
+  { id: 7, type: "correctStreak", requiredStreak: 5, points: 10 },
   { id: 8, type: "correctStreak", requiredStreak: 10, points: 100 },
+  { id: 28, type: "correctStreak", requiredStreak: 15, points: 100 },
+
+  // 🤝 Referral Rewards
   { id: 9, type: "referral", requiredInvites: 1, points: 25 },
   { id: 10, type: "referral", requiredInvites: 2, points: 50 },
   { id: 11, type: "referral", requiredInvites: 3, points: 100 },
 ];
+
 
 // ✅ GET /api/reward?playerId=123
 export async function GET(req: NextRequest) {

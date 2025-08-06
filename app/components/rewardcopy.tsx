@@ -29,6 +29,7 @@ export default function RewardPage({ playerId }: Props) {
   const [rewards, setRewards] = useState<RewardItem[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [showClaimed, setShowClaimed] = useState(false); // Toggle state
 
   useEffect(() => {
     const fetchRewards = async () => {
@@ -76,17 +77,34 @@ export default function RewardPage({ playerId }: Props) {
     }
   };
 
+  // Filter rewards based on toggle state
+  const displayedRewards = showClaimed
+    ? rewards.filter((r) => r.claimed)
+    : rewards.filter((r) => !r.claimed).slice(0, 10); // Only top 10 unclaimed
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-6">
       <h1 className="text-3xl font-bold mb-6 text-center text-gray-800">
         Your Rewards Are Here
       </h1>
 
-      {rewards.length === 0 ? (
-        <p className="text-center text-gray-500">No rewards found.</p>
+      {/* Toggle Button */}
+      <div className="text-center mb-6">
+        <button
+          onClick={() => setShowClaimed(!showClaimed)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all"
+        >
+          {showClaimed ? "Show Unclaimed Rewards" : "Claimed Rewards"}
+        </button>
+      </div>
+
+      {displayedRewards.length === 0 ? (
+        <p className="text-center text-gray-500">
+          {showClaimed ? "No claimed rewards found." : "No unclaimed rewards available."}
+        </p>
       ) : (
         <div className="space-y-6 max-w-4xl mx-auto">
-          {rewards.map((reward) => (
+          {displayedRewards.map((reward) => (
             <div
               key={reward.id}
               className="relative border border-gray-200 p-6 rounded-2xl shadow-lg bg-white hover:bg-gray-50 transition-all duration-300"
@@ -116,18 +134,24 @@ export default function RewardPage({ playerId }: Props) {
 
               {/* Claim button */}
               <div className="mt-0 text-right">
-  <button
-    disabled={!reward.claimable || reward.claimed}
-    onClick={() => handleClaim(reward)}
-    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
-      reward.claimed
-        ? "bg-gray-400 text-white cursor-not-allowed"
-        : "bg-green-600 text-white hover:bg-green-700"
-    }`}
-  >
-    {reward.claimed ? "Claimed" : "Claim"}
-  </button>
-</div>
+                <button
+                  disabled={!reward.claimable || reward.claimed}
+                  onClick={() => handleClaim(reward)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 ${
+                    reward.claimed
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : reward.claimable
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                  }`}
+                >
+                  {reward.claimed
+                    ? "Claimed"
+                    : reward.claimable
+                    ? "Claim"
+                    : "Not Available"}
+                </button>
+              </div>
             </div>
           ))}
         </div>

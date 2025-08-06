@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { saveResultIfHigher } from "@/utils/fResults";
 import { getBadge, getBadgeProgress } from "./badge";
 import SharePopup from "@/app/share/page";
+import { useSearchParams } from "next/navigation";
 
 export default function QuizPageSection({ Quizes, levelNumber, levelTitle, player }: any) {
   const len = Quizes.length;
@@ -33,6 +34,12 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
   const quizer = Quizes[questionNumber];
   const totalScore = player?.Playerpoint ? player.Playerpoint + score : score;
   const [correctStreak, setCorrectStreak] = useState(0);
+  const searchParams = useSearchParams();
+const previousScore = Number(searchParams.get("prevScore")) || null;
+const [prevScore, setPrevScore] = useState<number | null>(previousScore);
+const finalTotalScore = player?.Playerpoint
+  ? player.Playerpoint - (prevScore ?? 0) + score
+  : score;
 
 
   useEffect(() => {
@@ -63,7 +70,11 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
           score: finalScore,
         });
 
-        const finalTotalScore = player?.Playerpoint ? player.Playerpoint + finalScore : finalScore;
+        const previous = Number(prevScore ?? 0);
+const finalTotalScore = player?.Playerpoint ? player.Playerpoint - previous + finalScore: finalScore;
+
+
+       // const finalTotalScore = player?.Playerpoint ? player.Playerpoint + finalScore : finalScore;
         const badge = getBadge(finalTotalScore);
 
         await fetch("/api/player/updateBadge", {
@@ -152,6 +163,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
     }
   };
   const handleRetry = () => {
+    
   setSelectedAnswer(-1);
   setAnswerChecked(false);
   setRetryCount((prev) => prev + 1);
@@ -334,9 +346,18 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
             )}
           </div>
 
-          <p className="text-lg font-medium text-center mt-2 text-gray-700">
-            ✅ Answer: {correctAnswersCount}/{len}
-          </p>
+         {prevScore !== null && prevScore !== score && (
+  <p
+    className="text-sm font-bold px-3 py-1 rounded"
+    style={{
+      backgroundColor: "rgb(138, 102, 116)",
+      color: "#F7E6A9",
+    }}
+  >
+    🔁 Previous Score: {prevScore}/100
+  </p>
+)}
+
 
           <div className="flex flex-wrap-reverse justify-center gap-8 items-center">
             <div className="flex flex-col gap-8 mt-6 justify-center">
@@ -346,7 +367,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
               </div>
               <div className="bg-blue-50 rounded border-2 border-blue-100 flex flex-col gap-4 items-center px-6 py-4">
                 <p className="mt-4 text-xl">🏆 TOTAL SCORE</p>
-                <h1 className="text-6xl font-bold">{player?.Playerpoint + score}</h1>
+                <h1 className="text-6xl font-bold">{finalTotalScore}</h1>
               </div>
             </div>
             <Image
@@ -359,7 +380,7 @@ export default function QuizPageSection({ Quizes, levelNumber, levelTitle, playe
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mt-20">
-            <button className="quizPbtn" onClick={handleRetry}>↻ Retry</button>
+            
             <button className="quizPbtn" onClick={handleNextLevel}>Next Level</button>
             <SharePopup score={score} player={player} levelTitle={levelTitle} buttonClass="quizPbtn" />
           </div>
